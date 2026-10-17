@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>ふたりへの質問票</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* Layout: 1カラムのスマホ用。トップ＝12カテゴリーのタイル、カテゴリー＝縦に並んだ質問カード、下に固定のコピーバー */
+:root{
+  --bg:#f6f4f1; --surface:#ffffff; --ink:#2b2a33; --muted:#76727f; --line:#e3dfe6;
+  --accent:#5b4a8b; --accent-soft:#ece8f5; --done:#2f7d6b; --done-soft:#e3f2ec;
+  --display:"Shippori Mincho","Hiragino Mincho ProN",serif;
+  --body:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#18171c; --surface:#222129; --ink:#ecebf1; --muted:#a29fae; --line:#34323d;
+  --accent:#b3a4e6; --accent-soft:#2e2a40; --done:#7fd1b9; --done-soft:#1d332d; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#18171c; --surface:#222129; --ink:#ecebf1; --muted:#a29fae; --line:#34323d;
+  --accent:#b3a4e6; --accent-soft:#2e2a40; --done:#7fd1b9; --done-soft:#1d332d; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.7;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:0 calc(96px + env(safe-area-inset-bottom,0px))}
+.wrap{max-width:640px;margin:0 auto}
+header{padding-block:28px 18px;display:grid;gap:6px}
+.eyebrow{font-size:12px;letter-spacing:.12em;color:var(--muted)}
+h1{font-family:var(--display);font-weight:700;font-size:26px;line-height:1.3;margin:0;text-wrap:balance}
+h2{font-family:var(--display);font-weight:700;font-size:22px;line-height:1.35;margin:0;text-wrap:balance}
+.total{display:grid;gap:6px;margin-top:8px}
+.total-row{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--done);border-radius:3px;transition:width .3s}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tile{all:unset;box-sizing:border-box;cursor:pointer;background:var(--surface);border:1px solid var(--line);
+  border-radius:14px;padding:14px;display:grid;gap:10px;align-content:space-between;min-height:118px}
+.tile:focus-visible,.btn:focus-visible,.back:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tile .num{font-size:11px;letter-spacing:.1em;color:var(--muted);font-variant-numeric:tabular-nums}
+.tile .name{font-weight:700;font-size:15px;line-height:1.45}
+.tile .count{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tile.complete{background:var(--done-soft);border-color:var(--done)}
+.tile.complete .count{color:var(--done);font-weight:700}
+.note{font-size:12.5px;color:var(--muted);margin:18px 0 0}
+.back{all:unset;cursor:pointer;color:var(--accent);font-size:14px;font-weight:500;padding:6px 0}
+.cathead{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:12px 12px;
+  display:grid;gap:4px;border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.qs{display:grid;gap:12px;padding-top:16px}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:8px}
+.q.answered{background:var(--done-soft);border-color:var(--done)}
+.qtop{display:flex;gap:8px;align-items:baseline}
+.qid{font-size:11px;letter-spacing:.06em;color:var(--muted);font-variant-numeric:tabular-nums;flex:none}
+.qtext{font-weight:500;min-width:0}
+.badge{margin-left:auto;flex:none;font-size:11px;font-weight:700;color:var(--done)}
+.q:not(.answered) .badge{visibility:hidden}
+textarea{width:100%;box-sizing:border-box;min-height:84px;resize:vertical;font:inherit;font-size:16px;color:var(--ink);
+  background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px}
+.q.answered textarea{background:var(--surface)}
+textarea:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:8;background:var(--surface);border-top:1px solid var(--line);
+  padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.dock-in{max-width:640px;margin:0 auto;display:flex;gap:12px;align-items:center}
+.saved{font-size:12px;color:var(--muted);flex:1;min-width:0}
+.btn{all:unset;box-sizing:border-box;cursor:pointer;text-align:center;font-weight:700;font-size:15px;border-radius:12px;padding:12px 18px}
+.btn.primary{background:var(--accent);color:var(--surface)}
+.btn.ghost{border:1px solid var(--line);color:var(--ink);background:var(--surface)}
+.btn[disabled]{opacity:.45;cursor:default}
+.sheet-bg{position:fixed;inset:0;z-index:20;background:rgba(20,18,30,.45);display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:640px;border-radius:18px 18px 0 0;display:grid;gap:14px;
+  padding:22px max(16px,env(safe-area-inset-right,0px)) calc(22px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));max-height:85vh;overflow:auto}
+.sheet p{margin:0;color:var(--muted);font-size:13.5px}
+.who{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.who .btn{padding:18px;font-family:var(--display);font-size:20px;background:var(--accent-soft);color:var(--ink)}
+.result{display:grid;gap:10px}
+.result textarea{min-height:200px;font-size:13px}
+.ok{color:var(--done);font-weight:700}
+.warn{background:var(--accent-soft);border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+@media (prefers-reduced-motion:reduce){.bar>i{transition:none}}
+</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}*{-webkit-tap-highlight-color:transparent}</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="storageWarn" class="warn" hidden>このブラウザでは回答を保存できません。閉じる前に「回答をコピー」で控えを取ってください。</div>
+
+  <section id="home">
+    <header>
+      <div class="eyebrow">2026.11.29 WEDDING CHAT</div>
+      <h1>ふたりへの質問票</h1>
+      <div class="total">
+        <div class="total-row"><span>全体の進み具合</span><span id="totalCount">0 / 177</span></div>
+        <div class="bar"><i id="totalBar" style="width:0%"></i></div>
+      </div>
+    </header>
+    <div class="warn"><b>ご注意</b><br>Safariの仕組みで、このページを7日ほど開かないと、保存した回答が消えることがあります。数日おきに開いて、区切りのいいところで「回答をコピー」から控えを残してください。プライベートモードでは保存できません。</div>
+    <div class="grid" id="grid"></div>
+    <p class="note">答えはこのiPhoneの中に自動で保存されます。答えたくない質問は空欄のままで大丈夫です。音声で答えるときは、キーボードのマイクボタンを使ってください。</p>
+  </section>
+
+  <section id="cat" hidden>
+    <div class="cathead">
+      <button class="back" id="backBtn" type="button">← カテゴリー一覧へ</button>
+      <h2 id="catName"></h2>
+      <div class="total-row"><span id="catCount"></span></div>
+    </div>
+    <div class="qs" id="qs"></div>
+    <p class="note"><button class="back" id="backBtn2" type="button">← カテゴリー一覧へ戻る</button></p>
+  </section>
+</div>
+
+<div class="dock">
+  <div class="dock-in">
+    <span class="saved" id="savedMsg">回答は自動で保存されます</span>
+    <button class="btn primary" id="copyBtn" type="button">回答をコピー</button>
+  </div>
+</div>
+
+<div class="sheet-bg" id="sheetBg" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div id="step1">
+      <h2 id="sheetTitle">あなたは新郎ですか、新婦ですか？</h2>
+      <p style="margin:6px 0 14px">選んだほうの回答として、答えた質問だけをまとめてコピーします。</p>
+      <div class="who">
+        <button class="btn" type="button" data-who="新郎" id="whoGroom">新郎</button>
+        <button class="btn" type="button" data-who="新婦" id="whoBride">新婦</button>
+      </div>
+    </div>
+    <div id="step2" class="result" hidden>
+      <h2 id="resultTitle"></h2>
+      <p id="resultMsg"></p>
+      <textarea id="resultText" readonly></textarea>
+    </div>
+    <button class="btn ghost" type="button" id="closeSheet">閉じる</button>
+  </div>
+</div>
+
+<script>
+const CATS = [{"name": "基本プロフィール", "qs": [["P001", "名前、ニックネーム、呼ばれたい名前は？"], ["P002", "生年月日、誕生日の過ごし方は？"], ["P003", "出身地と、地元の好きなところは？"], ["P004", "現在住んでいる地域と、気に入っているところは？"], ["P005", "血液型や星座など、自分が把握しているプロフィール情報は？"], ["P006", "身長や利き手など、自分を紹介する特徴は？"], ["P007", "家族構成と、家族内での立ち位置は？"], ["P008", "自分を一言で表すと？"], ["P009", "初対面の人にどんな人だと思われる？"], ["P010", "親しい人からはどんな人だと言われる？"], ["P013", "自分のチャームポイントや特徴は？"], ["P014", "周囲の人に覚えてもらいやすい特徴は？"], ["P015", "プロフィールでぜひ知ってほしい、自分に関する情報は？"]]}, {"name": "幼少期・子ども時代", "qs": [["C001", "子どもの頃はどんな性格だった？"], ["C002", "幼い頃の夢は何だった？"], ["C003", "子どもの頃に夢中になっていた遊びは？"], ["C004", "子どもの頃に好きだった食べ物は？"], ["C005", "子どもの頃に苦手だったものは？"], ["C006", "家族からよく言われていたことは？"], ["C007", "幼少期の印象的な思い出は？"], ["C008", "子どもの頃にやらかした失敗談は？"], ["C009", "子どもの頃に褒められてうれしかったことは？"], ["C010", "習い事やスポーツなど、当時取り組んでいたことは？"], ["C011", "昔から変わっていない性格や習慣は？"], ["C012", "昔と比べて大きく変わったところは？"], ["C013", "子どもの頃に憧れていた人は？"], ["C014", "家族と過ごした忘れられない出来事は？"], ["C015", "当時の自分に今の自分から声をかけるなら？"]]}, {"name": "学校生活・学生時代・仕事", "qs": [["S001", "学生時代はどんなタイプだった？"], ["S002", "得意科目と苦手科目は？"], ["S003", "所属していた部活動やサークルは？"], ["S004", "学生時代に最も熱中したことは？"], ["S005", "学生時代の忘れられない思い出は？"], ["S006", "学生時代に経験した一番の失敗は？"], ["S007", "友人たちの中でどんな役割だった？"], ["S008", "当時の自分を象徴するエピソードは？"], ["S009", "人生の転機になった出来事や出会いは？"], ["S010", "進学や就職先を選んだ理由は？"], ["S011", "現在の仕事を簡単に説明すると？"], ["S012", "仕事の好きなところや、やりがいは？"], ["S013", "仕事で身についたと思う能力は？"], ["S014", "これまでに努力して達成したことは？"], ["S015", "学生時代や仕事を通して出会った、印象的な恩師・先輩・同僚は？"]]}, {"name": "性格・価値観・人柄", "qs": [["V001", "自分の長所を3つ挙げると？"], ["V002", "自分の短所や弱点は？"], ["V003", "自分が大切にしている価値観は？"], ["V004", "何をしているときに幸せを感じる？"], ["V005", "どんなときにストレスを感じる？"], ["V006", "落ち込んだとき、どうやって立ち直る？"], ["V007", "人から相談されたとき、どんな対応をする？"], ["V008", "自分が譲れないこだわりは？"], ["V009", "自分の意外な一面は？"], ["V010", "人からよく指摘される癖や口癖は？"], ["V011", "相手の最も尊敬しているところは？"], ["V012", "相手の第一印象と、現在の印象の違いは？"], ["V013", "相手の長所が表れた具体的なエピソードは？"], ["V014", "相手の意外な一面やギャップは？"], ["V015", "相手を初対面の人に紹介するなら、どんな人と説明する？"]]}, {"name": "趣味・好きなもの・好み", "qs": [["H001", "趣味や最近ハマっていることは？"], ["H002", "好きな食べ物と、その理由は？"], ["H003", "苦手な食べ物や食べられないものは？"], ["H004", "好きな飲み物は？"], ["H005", "好きな料理・得意料理は？"], ["H006", "好きな音楽やアーティストは？"], ["H007", "好きな映画・ドラマ・アニメは？"], ["H008", "好きな本・漫画・ゲームは？"], ["H009", "好きなキャラクターや推しは？"], ["H010", "好きな季節と、その理由は？"], ["H011", "好きな場所や、落ち着く場所は？"], ["H012", "好きなファッションや身につけるものは？"], ["H013", "旅行で行ってみたい場所は？"], ["H014", "自分へのご褒美として選ぶものは？"], ["H015", "お金や時間をかけても惜しくない好きなものは？"]]}, {"name": "日常生活・習慣・暮らし", "qs": [["D001", "朝型？ 夜型？ 普段の生活リズムは？"], ["D002", "休日はどんなふうに過ごす？"], ["D003", "家で一番好きな場所は？"], ["D004", "家でついやってしまう習慣は？"], ["D005", "つい集めてしまうものは？"], ["D006", "最近うれしかった小さな出来事は？"], ["D007", "最近挑戦したことは？"], ["D008", "つい時間を忘れてしまうことは？"], ["D009", "苦手な家事と、得意な家事は？"], ["D010", "予定を立てて行動するタイプ？ その場で決めるタイプ？"], ["D011", "相手の家での意外な習慣は？"], ["D012", "相手が無意識によくしている行動は？"], ["D013", "相手が機嫌よく過ごすために必要なものは？"], ["D014", "相手が疲れたときに見せるサインは？"], ["D015", "ふたりの生活習慣で似ているところ、違うところは？"]]}, {"name": "出会い・馴れ初め", "qs": [["M001", "初めて出会ったのは、いつ・どこで・どんな状況だった？"], ["M002", "出会う前、相手のことを知っていた？"], ["M003", "初対面の相手にどんな印象を持った？"], ["M004", "相手の第一印象で特に覚えていることは？"], ["M005", "最初に会話したとき、どんな話をした？"], ["M006", "相手に興味を持ったきっかけは？"], ["M007", "相手を意識し始めた瞬間は？"], ["M008", "初めてふたりで出かけた場所と、そのときの思い出は？"], ["M009", "交際前、相手について知りたかったことは？"], ["M010", "交際することになった経緯は？"], ["M011", "告白したのはどちら？ どんな言葉や状況だった？"], ["M012", "交際が始まったとき、どんな気持ちだった？"], ["M013", "付き合い始めた頃のふたりは、どんな関係だった？"], ["M014", "交際初期に起きた、印象的な出来事は？"], ["M015", "出会いから現在までを一言で表すと？"]]}, {"name": "恋愛・プロポーズ・結婚の決め手", "qs": [["R001", "交際開始日はいつ？ 記念日の過ごし方は？"], ["R002", "初デートはどこで、何をした？"], ["R003", "思い出に残っているデートは？"], ["R004", "相手を好きだと確信した瞬間は？"], ["R005", "相手に言われてうれしかった言葉は？"], ["R006", "相手のどんなところに惹かれた？"], ["R007", "交際中に一緒に乗り越えた出来事は？"], ["R008", "交際中に大きく成長できたと感じる経験は？"], ["R009", "結婚を意識し始めたきっかけは？"], ["R010", "この人と結婚したいと思った理由は？"], ["R011", "プロポーズはいつ、どこで、どんな状況だった？"], ["R012", "プロポーズをした側・受けた側として、何を感じた？"], ["R013", "婚約後、特に印象に残っている出来事は？"], ["R014", "結婚が決まってから、相手への気持ちに変化はあった？"], ["R015", "結婚を決めた今、相手に改めて伝えたいことは？"]]}, {"name": "ふたりの関係性・共同生活", "qs": [["L001", "ふたりの共通点を3つ挙げると？"], ["L002", "正反対だと思うところは？"], ["L003", "ふたりの役割分担は？"], ["L004", "意見が食い違ったとき、どうやって決める？"], ["L005", "ケンカになりやすい話題は？"], ["L006", "ケンカしたときの仲直りの方法は？"], ["L007", "相手に直してほしいところは？"], ["L008", "相手に感謝している日常の行動は？"], ["L009", "相手がいてよかったと思った瞬間は？"], ["L010", "一緒にいて最も安心するのはどんなとき？"], ["L011", "ふたりだけのルールや習慣は？"], ["L012", "ふたりの間でよく使う言葉や合言葉は？"], ["L013", "ふたりのどちらが計画的？ どちらが行き当たりばったり？"], ["L014", "相手の影響で始めたこと、好きになったものは？"], ["L015", "ふたりの関係を象徴する出来事は？"]]}, {"name": "旅行・イベント・思い出", "qs": [["T001", "初めて一緒に旅行した場所は？"], ["T002", "一番楽しかった旅行は？"], ["T003", "旅行中に起きたハプニングは？"], ["T004", "旅行先で印象に残った食べ物は？"], ["T005", "もう一度行きたい場所と、その理由は？"], ["T006", "ふたりで参加したイベントで印象的だったものは？"], ["T007", "一緒に過ごした誕生日や記念日の思い出は？"], ["T008", "一緒に見た景色で忘れられないものは？"], ["T009", "一緒に挑戦して成功したことは？"], ["T010", "一緒に挑戦して失敗したことは？"], ["T011", "ふたりで一番笑った出来事は？"], ["T012", "写真を見るだけで当時を思い出す出来事は？"], ["T013", "これまでで一番大変だったお出かけは？"], ["T014", "ふたりでやってみたい新しい体験は？"], ["T015", "今後一緒に行きたい旅行先と、そこでやりたいことは？"]]}, {"name": "面白い小ネタ・友人・周囲との関係", "qs": [["F001", "人生で一番恥ずかしかった出来事は？"], ["F002", "今だから笑える失敗談は？"], ["F003", "自分でも不思議だと思う癖は？"], ["F004", "人には理解されにくいこだわりは？"], ["F005", "自分が得意だと思っている、ちょっと変わったことは？"], ["F006", "無人島にひとつ持っていくなら何？"], ["F007", "1日だけ別の職業になれるなら何をする？"], ["F008", "100万円を自由に使えるなら何に使う？"], ["F009", "1週間休みがあったら何をする？"], ["F010", "相手を動物に例えるなら？ その理由は？"], ["F011", "相手が絶対にやらなさそうなことは？"], ["F012", "相手が突然有名人になったら、どんな理由だと思う？"], ["F013", "相手の口癖や、つい笑ってしまう行動は？"], ["F014", "ふたりの間で語り継がれている珍事件は？"], ["F015", "お互いにクイズを出すなら、どんな問題を出す？"]]}, {"name": "結婚式・ゲスト・これからの未来", "qs": [["W001", "今回の結婚式場を選んだ理由は？"], ["W002", "衣装選びでこだわったポイントは？"], ["W003", "結婚式の準備で一番大変だったことは？"], ["W004", "結婚式で特に楽しみにしていることは？"], ["W005", "結婚式でゲストに注目してほしいポイントは？"], ["W006", "今日、ゲストに一番伝えたいことは？"], ["W007", "今日来てくれたゲストとの思い出で、特に伝えたいものは？"], ["W008", "ゲストに「ふたりらしい」と思ってもらいたいところは？"], ["W009", "結婚後に一緒に始めたいことは？"], ["W010", "どんな家庭を築きたい？"], ["W011", "5年後、どんな生活を送っていたい？"], ["W012", "いつかふたりで実現したい夢は？"], ["W013", "結婚後も大切にしたい自分の時間や趣味は？"], ["W014", "相手と一緒に年齢を重ねたら、どんな夫婦になっていたい？"]]}];
+const KEY = "wedding-qs-answers-v1";
+let answers = {};
+let canStore = true;
+try { answers = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; localStorage.setItem(KEY + "-test", "1"); localStorage.removeItem(KEY + "-test"); }
+catch (e) { canStore = false; }
+if (!canStore) document.getElementById("storageWarn").hidden = false;
+
+const $ = id => document.getElementById(id);
+const TOTAL = CATS.reduce((n, c) => n + c.qs.length, 0);
+const isDone = id => (answers[id] || "").trim() !== "";
+const doneIn = c => c.qs.filter(q => isDone(q[0])).length;
+
+function save() {
+  if (!canStore) return;
+  try {
+    localStorage.setItem(KEY, JSON.stringify(answers));
+    const t = new Date();
+    $("savedMsg").textContent = "保存しました " + t.getHours() + ":" + String(t.getMinutes()).padStart(2, "0");
+  } catch (e) { $("savedMsg").textContent = "保存できませんでした。コピーで控えを取ってください"; }
+}
+
+function renderHome() {
+  const g = $("grid"); g.innerHTML = "";
+  CATS.forEach((c, i) => {
+    const d = doneIn(c);
+    const b = document.createElement("button");
+    b.type = "button"; b.id = "tile-" + i;
+    b.className = "tile" + (d === c.qs.length ? " complete" : "");
+    b.innerHTML = `<div class="num">${String(i + 1).padStart(2, "0")}</div><div class="name"></div>
+      <div style="display:grid;gap:6px"><div class="count">${c.qs.length}問中 ${d}問回答済み</div>
+      <div class="bar"><i style="width:${d / c.qs.length * 100}%"></i></div></div>`;
+    b.querySelector(".name").textContent = c.name;
+    b.onclick = () => openCat(i);
+    g.appendChild(b);
+  });
+  const all = CATS.reduce((n, c) => n + doneIn(c), 0);
+  $("totalCount").textContent = `${all} / ${TOTAL}`;
+  $("totalBar").style.width = (all / TOTAL * 100) + "%";
+}
+
+let current = -1;
+function updateCatCount() {
+  const c = CATS[current];
+  $("catCount").textContent = `${c.qs.length}問中 ${doneIn(c)}問回答済み`;
+}
+function openCat(i) {
+  current = i; const c = CATS[i];
+  $("catName").textContent = c.name;
+  const box = $("qs"); box.innerHTML = "";
+  c.qs.forEach(([id, text]) => {
+    const card = document.createElement("div");
+    card.className = "q" + (isDone(id) ? " answered" : "");
+    card.innerHTML = `<div class="qtop"><span class="qid">${id}</span><span class="qtext"></span><span class="badge">回答済み</span></div>
+      <textarea id="a-${id}" placeholder="ここに入力" aria-label=""></textarea>`;
+    card.querySelector(".qtext").textContent = text;
+    const ta = card.querySelector("textarea");
+    ta.setAttribute("aria-label", text);
+    ta.value = answers[id] || "";
+    let timer;
+    ta.addEventListener("input", () => {
+      answers[id] = ta.value;
+      if (!ta.value.trim()) delete answers[id];
+      card.classList.toggle("answered", isDone(id));
+      updateCatCount();
+      clearTimeout(timer); timer = setTimeout(save, 400);
+    });
+    ta.addEventListener("blur", save);
+    box.appendChild(card);
+  });
+  updateCatCount();
+  $("home").hidden = true; $("cat").hidden = false;
+  window.scrollTo(0, 0);
+}
+function goHome() {
+  save(); renderHome();
+  $("cat").hidden = true; $("home").hidden = false;
+  window.scrollTo(0, 0);
+}
+$("backBtn").onclick = goHome; $("backBtn2").onclick = goHome;
+
+// 行頭の「#」はチャットアプリ側でコメント扱いになるので全角に置き換える
+const clean = s => s.trim().split("\n").map(l => l.replace(/^\s*#/, "＃")).join("\n");
+
+function buildText(who) {
+  const out = [`## ${who}の回答`, ""];
+  CATS.forEach(c => {
+    const done = c.qs.filter(q => isDone(q[0]));
+    if (!done.length) return;
+    out.push(`### ${c.name}`);
+    done.forEach(([id, text]) => { out.push(`【${id}】${text}`, clean(answers[id]), ""); });
+  });
+  return out.join("\n").trim() + "\n";
+}
+
+function openSheet() {
+  const n = Object.keys(answers).filter(isDone).length;
+  $("step1").hidden = false; $("step2").hidden = true;
+  if (n === 0) {
+    $("step1").hidden = true; $("step2").hidden = false;
+    $("resultTitle").textContent = "まだ回答がありません";
+    $("resultMsg").textContent = "質問に答えると、答えた分だけコピーできるようになります。";
+    $("resultText").hidden = true;
+  }
+  $("sheetBg").hidden = false;
+}
+async function copyFor(who) {
+  const text = buildText(who);
+  const n = Object.keys(answers).filter(isDone).length;
+  $("step1").hidden = true; $("step2").hidden = false;
+  const ta = $("resultText"); ta.hidden = false; ta.value = text;
+  $("resultTitle").textContent = `${who}の回答（${n}問）`;
+  try {
+    await navigator.clipboard.writeText(text);
+    $("resultMsg").innerHTML = '<span class="ok">コピーしました。</span> LINEやメモに貼り付けて送ってください。';
+  } catch (e) {
+    ta.focus(); ta.select();
+    $("resultMsg").textContent = "自動でコピーできませんでした。下の文章を長押しして「すべてを選択」→「コピー」してください。";
+  }
+}
+$("copyBtn").onclick = openSheet;
+$("whoGroom").onclick = () => copyFor("新郎");
+$("whoBride").onclick = () => copyFor("新婦");
+$("closeSheet").onclick = () => { $("sheetBg").hidden = true; };
+$("sheetBg").addEventListener("click", e => { if (e.target === $("sheetBg")) $("sheetBg").hidden = true; });
+
+renderHome();
+</script>
+
+</body>
+</html>
