@@ -81,6 +81,9 @@ textarea:focus{outline:2px solid var(--accent);outline-offset:0;border-color:tra
 .optnote{font-size:12.5px;color:var(--muted);margin:-4px 0 0;text-align:center}
 .opt-tag{font-size:10.5px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:1px 6px;flex:none}
 .tile .opt{font-size:11px;color:var(--muted)}
+.import-row{display:flex;justify-content:center;margin-top:18px}
+.import-row .btn{width:100%;font-size:14px}
+.choice{display:grid;gap:10px}
 .warn{background:var(--accent-soft);border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:12px}
 @media (prefers-reduced-motion:reduce){.bar>i{transition:none}}
 </style>
@@ -101,6 +104,7 @@ textarea:focus{outline:2px solid var(--accent);outline-offset:0;border-color:tra
     </header>
     <div class="warn"><b>ご注意</b><br>Safariの仕組みで、このページを7日ほど開かないと、保存した回答が消えることがあります。数日おきに開いて、区切りのいいところで「回答をコピー」から控えを残してください。プライベートモードでは保存できません。</div>
     <div class="grid" id="grid"></div>
+    <div class="import-row"><button class="btn ghost" id="importBtn" type="button">コピーした回答を取り込む</button></div>
     <p class="note">答えはこのiPhoneの中に自動で保存されます。各カテゴリーの下のほうにある「任意回答」は、答えられるものだけで大丈夫です。音声で答えるときは、キーボードのマイクボタンを使ってください。</p>
   </section>
 
@@ -138,6 +142,26 @@ textarea:focus{outline:2px solid var(--accent);outline-offset:0;border-color:tra
       <textarea id="resultText" readonly></textarea>
     </div>
     <button class="btn ghost" type="button" id="closeSheet">閉じる</button>
+  </div>
+</div>
+
+<div class="sheet-bg" id="impBg" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="impTitle">
+    <div id="imp1" style="display:grid;gap:12px">
+      <h2 id="impTitle">コピーした回答を取り込む</h2>
+      <p>「回答をコピー」でコピーした文章を、下の欄に貼り付けてください。前の版でコピーしたものも使えます。</p>
+      <textarea id="impText" placeholder="ここを長押しして「ペースト」"></textarea>
+      <button class="btn primary" type="button" id="impRead">読み取る</button>
+    </div>
+    <div id="imp2" style="display:grid;gap:12px" hidden>
+      <h2 id="impResult"></h2>
+      <p id="impDetail"></p>
+      <div class="choice" id="impChoice">
+        <button class="btn primary" type="button" id="impAll">貼り付けた内容で上書きする</button>
+        <button class="btn ghost" type="button" id="impEmpty">今の答えを残し、空欄だけ埋める</button>
+      </div>
+    </div>
+    <button class="btn ghost" type="button" id="impClose">閉じる</button>
   </div>
 </div>
 
@@ -280,6 +304,62 @@ $("whoGroom").onclick = () => copyFor("新郎");
 $("whoBride").onclick = () => copyFor("新婦");
 $("closeSheet").onclick = () => { $("sheetBg").hidden = true; };
 $("sheetBg").addEventListener("click", e => { if (e.target === $("sheetBg")) $("sheetBg").hidden = true; });
+
+// 「回答をコピー」の文章から、質問IDごとの答えを読み取る
+const KNOWN = new Set(CATS.flatMap(c => c.qs.map(q => q[0])));
+function parseCopied(text) {
+  const found = {}; let cur = null, buf = [];
+  const flush = () => { if (cur) { const a = buf.join("\n").trim(); if (a) found[cur] = a; } cur = null; buf = []; };
+  text.replace(/\r\n?/g, "\n").split("\n").forEach(line => {
+    const m = line.match(/^\s*【\s*([A-Z]\d{3})\s*】/);
+    if (m) { flush(); cur = m[1]; return; }
+    if (/^\s*#{2,3}\s/.test(line)) { flush(); return; }
+    if (cur) buf.push(line);
+  });
+  flush();
+  return found;
+}
+let pending = {};
+function openImport() {
+  $("imp1").hidden = false; $("imp2").hidden = true; $("impText").value = "";
+  $("impBg").hidden = false;
+}
+$("importBtn").onclick = openImport;
+$("impClose").onclick = () => { $("impBg").hidden = true; };
+$("impBg").addEventListener("click", e => { if (e.target === $("impBg")) $("impBg").hidden = true; });
+$("impRead").onclick = () => {
+  const found = parseCopied($("impText").value);
+  const ids = Object.keys(found);
+  const known = ids.filter(id => KNOWN.has(id));
+  const unknown = ids.length - known.length;
+  pending = {}; known.forEach(id => pending[id] = found[id]);
+  const differ = known.filter(id => isDone(id) && answers[id].trim() !== pending[id]).length;
+  $("imp1").hidden = true; $("imp2").hidden = false;
+  if (!known.length) {
+    $("impResult").textContent = "答えが見つかりませんでした";
+    $("impDetail").textContent = "「【P001】」のような質問IDの付いた文章を、そのまま貼り付けてください。";
+    $("impChoice").hidden = true; return;
+  }
+  $("impChoice").hidden = false;
+  $("impResult").textContent = `${known.length}問の答えを読み取りました`;
+  let d = differ ? `そのうち${differ}問は、今入っている答えと内容が違います。` : "今入っている答えとぶつかるものはありません。";
+  if (unknown) d += `（今の質問票にない質問が${unknown}問あったので、それは取り込みません）`;
+  $("impDetail").textContent = d;
+  $("impEmpty").hidden = !differ;
+  $("impAll").textContent = differ ? "貼り付けた内容で上書きする" : "取り込む";
+};
+function applyImport(overwrite) {
+  let n = 0;
+  Object.entries(pending).forEach(([id, a]) => {
+    if (overwrite || !isDone(id)) { answers[id] = a; n++; }
+  });
+  save(); renderHome();
+  $("impChoice").hidden = true;
+  $("impResult").textContent = `${n}問を取り込みました`;
+  $("impDetail").textContent = "各カテゴリーを開くと、取り込んだ答えが入っています。";
+}
+$("impAll").onclick = () => applyImport(true);
+$("impEmpty").onclick = () => applyImport(false);
 
 renderHome();
 </script>
